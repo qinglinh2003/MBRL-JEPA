@@ -85,7 +85,9 @@ def compute_world_model_loss(
 
     reward_loss = predicted_tokens.new_tensor(0.0)
     if predicted_reward is not None and target_reward is not None:
-        reward_loss = F.mse_loss(predicted_reward, target_reward.detach())
+        reward_loss = F.mse_loss(
+            predicted_reward.float(), target_reward.detach().float(),
+        ).to(predicted_tokens.dtype)
         total_loss = total_loss + lambda_r * reward_loss
 
     metrics = {

@@ -71,7 +71,14 @@ class FrozenVisualEncoder(nn.Module):
             dtype=_module_dtype(self.visual_encoder),
         )
         image_grid_thw = image_grid_thw.to(device=_module_device(self.visual_encoder))
-        return self.visual_encoder(pixel_values, grid_thw=image_grid_thw)
+        output = self.visual_encoder(pixel_values, grid_thw=image_grid_thw)
+        # Handle both raw tensor and BaseModelOutputWithPooling
+        # pooler_output contains the merged tokens (post-PatchMerger)
+        if hasattr(output, "pooler_output") and output.pooler_output is not None:
+            return output.pooler_output
+        if hasattr(output, "last_hidden_state"):
+            return output.last_hidden_state
+        return output
 
     @torch.no_grad()
     def encode_preprocessed(
@@ -113,7 +120,8 @@ class FrozenVisualEncoder(nn.Module):
 
     @classmethod
     def from_vlm(cls, vlm_model, processor) -> "FrozenVisualEncoder":
-        return cls(vlm_model.visual, processor)
+        visual = getattr(vlm_model, "visual", None) or vlm_model.model.visual
+        return cls(visual, processor)
 
 
 class DiscreteActionEncoder(nn.Module):

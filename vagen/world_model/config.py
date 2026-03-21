@@ -36,11 +36,14 @@ class ImaginationConfig:
 
 @dataclass
 class LoRAConfig:
-    rank: int = 16
-    alpha: int = 32
+    rank: int = 32
+    alpha: int = 64
     dropout: float = 0.05
     target_modules: List[str] = field(
-        default_factory=lambda: ["q_proj", "k_proj", "v_proj", "o_proj"],
+        default_factory=lambda: [
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        ],
     )
     unfreeze_norms: bool = True
 
@@ -78,6 +81,9 @@ class JEPAWorldModelConfig:
 
     # Position encoding
     rope_mode: Literal["preserve_native"] = "preserve_native"
+
+    # Residual prediction: ŝ_{t+1} = s_t + predictor_delta
+    use_residual_prediction: bool = True
 
     # Output
     use_output_norm: bool = True
